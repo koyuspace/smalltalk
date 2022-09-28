@@ -7,19 +7,19 @@ require('css-modules-require-hook/preset');
 
 const autoGlobals = require('auto-globals');
 const tape = require('supertape');
-const test = autoGlobals(tape);
 const stub = require('@cloudcmd/stub');
 const currify = require('currify');
 const wraptile = require('wraptile');
 
 global.window = {};
-const {create} = autoGlobals;
 
 const {UPDATE_FIXTURE} = process.env;
-const isUpdateFixtures = UPDATE_FIXTURE === 'true' || UPDATE_FIXTURE === '1';
-const noop = () => {};
 
 const smalltalk = require('../lib/smalltalk');
+const noop = () => {};
+const isUpdateFixtures = UPDATE_FIXTURE === 'true' || UPDATE_FIXTURE === '1';
+const {create} = autoGlobals;
+const test = autoGlobals(tape);
 const fixtureDir = path.join(__dirname, 'fixture');
 
 const writeFixture = (name, data) => {
@@ -29,6 +29,7 @@ const writeFixture = (name, data) => {
 const readFixture = (name) => {
     const fn = () => fs.readFileSync(`${fixtureDir}/${name}.html`, 'utf8');
     fn.update = !isUpdateFixtures ? noop : currify(writeFixture, name);
+    
     return fn;
 };
 
@@ -47,6 +48,7 @@ const fixture = {
 test('smalltalk: alert: innerHTML', (t, {document}) => {
     const {createElement} = document;
     const el = create();
+    
     createElement.returns(el);
     
     smalltalk.alert('title', 'hello\nworld');
@@ -59,6 +61,7 @@ test('smalltalk: alert: innerHTML', (t, {document}) => {
 test('smalltalk: alert: appendChild', (t, {document}) => {
     const {createElement} = document;
     const el = create();
+    
     createElement.returns(el);
     
     smalltalk.alert('title', 'message');
@@ -154,9 +157,7 @@ test('smalltalk: alert: keydown: stopPropagation', (t, {document}) => {
     
     smalltalk.alert('title', 'message');
     
-    const [, keydown] = el.addEventListener.args.filter(([event]) => {
-        return event === 'keydown';
-    }).pop();
+    const [, keydown] = el.addEventListener.args.filter(([event]) => event === 'keydown').pop();
     
     const event = {
         stopPropagation: stub(),
@@ -165,55 +166,6 @@ test('smalltalk: alert: keydown: stopPropagation', (t, {document}) => {
     keydown(event);
     
     t.ok(event.stopPropagation.called, 'should call stopPropagation');
-    t.end();
-});
-
-test('smalltalk: alert: keydown: tab: preventDefault', (t, {document}) => {
-    const parentElement = create();
-    const {
-        createElement,
-        querySelector,
-        activeElement,
-    } = document;
-    
-    const el = {
-        ...create(),
-        parentElement,
-        querySelector: (a) => {
-            if (a === '[data-name="js-ok"]')
-                return ok;
-        },
-    };
-    
-    activeElement.getAttribute.returns('js-ok');
-    
-    const ok = {
-        getAttribute: () => 'js-ok',
-        focus: stub(),
-        addEventListener: stub(),
-    };
-    
-    createElement.returns(el);
-    querySelector.returns(el);
-    
-    smalltalk.alert('title', 'message');
-    
-    const [, keydown] = el.addEventListener.args
-        .filter(([event]) => event === 'keydown')
-        .pop();
-    
-    const TAB = 9;
-    
-    const event = {
-        keyCode: TAB,
-        preventDefault: stub(),
-        stopPropagation: stub(),
-        target: el,
-    };
-    
-    keydown(event);
-    
-    t.ok(event.preventDefault.called, 'should call preventDefault');
     t.end();
 });
 
@@ -402,7 +354,7 @@ test('smalltalk: alert: keydown: left: focus', (t) => {
     t.end();
 });
 
-test('smalltalk: alert: click', (t, {document}) => {
+test('smalltalk: alert: click: focus', (t, {document}) => {
     const {
         createElement,
         querySelector,
@@ -995,6 +947,7 @@ test('smalltalk: prompt: custom label', (t, {document}) => {
 test('smalltalk: progress: innerHTML', (t, {document}) => {
     const {createElement} = document;
     const el = create();
+    
     createElement.returns(el);
     
     smalltalk.progress('title', 'hello\nworld');
